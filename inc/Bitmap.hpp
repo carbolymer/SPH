@@ -11,6 +11,7 @@ private:
 public:
   Bitmap(int, int);
   ~Bitmap();
+  void Draw();
   void RectFill(const int color, int x, int y, int width, int height);
 };
 

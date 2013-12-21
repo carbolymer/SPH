@@ -29,9 +29,9 @@ $(OBJS): %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $< -o $(DIR_OBJ)$@ -c
 
 clean:
-	rm $(DIR_OBJ)*.o
-	rm $(DIR_BIN)*
-	rm ./SPH
+	rm -f $(DIR_OBJ)*.o
+	rm -f $(DIR_BIN)*
+	rm -f ./SPH
 	echo -e "\033[01;33m[make]\033[00;32m All *.o and binary files removed.\033[00m"
 
 .PHONY: all clean doc

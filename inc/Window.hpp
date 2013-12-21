@@ -8,12 +8,15 @@ class Window
 private:
   int width;
   int height;
+  const int backgroundColor;
 public:
-  Window(int, int);
+  static bool doQuit;
+  Window(int, int, const int);
   ~Window();
-  void DrawBackground(const int color);
   void SetTitle(const char[]);
   Bitmap* GetBitmap();
+  static void CloseButtonHandler();
+  static int KeyboardCallback(int);
 };
 
 #endif

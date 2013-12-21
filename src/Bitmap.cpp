@@ -7,10 +7,14 @@ Bitmap::Bitmap(int _width, int _height) : width(_width), height(_height) {
   clear(bitmap);
 }
 
+
 Bitmap::~Bitmap() {
-  blit(bitmap, screen, 0, 0, 0, 0, width, height);
   destroy_bitmap(bitmap);
   unscare_mouse();
+}
+
+void Bitmap::Draw() {
+  blit(bitmap, screen, 0, 0, 0, 0, width, height);
 }
 
 void Bitmap::RectFill(const int color, int x, int y, int width, int height) {
