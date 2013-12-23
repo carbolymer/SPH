@@ -3,10 +3,11 @@ DIR_CPP=./src/
 DIR_OBJ=./tmp/
 DIR_BIN=./bin/
 DIR_TMP=./tmp/
+DIR_DATA=./fluids/
 
-CXXFLAGS=`root-config --cflags` -O2 -Wall -pedantic -std=c++11 -I $(DIR_HPP)
-LFLAGS=`root-config --libs`
-OBJS=hydro.o Fluid.o
+CXXFLAGS=`root-config --cflags` -O2 -Wall -pedantic -std=c++11 -I $(DIR_HPP) -pthread
+LFLAGS=`root-config --libs` -pthread
+OBJS=Benchmark.o hydro.o Fluid.o Engine.o
 
 # search paths
 vpath %.hpp $(DIR_HPP)
@@ -25,6 +26,7 @@ $(OBJS): %.o: %.cpp
 	@[ -d $(DIR_BIN) ] || mkdir -p $(DIR_BIN)
 	@[ -d $(DIR_MAN) ] || mkdir -p $(DIR_MAN)
 	@[ -d $(DIR_TMP) ] || mkdir -p $(DIR_TMP)
+	@[ -d $(DIR_DATA) ] || mkdir -p $(DIR_DATA)
 	echo -e "\033[01;33m[make]\033[01;36m $< \t\033[00;31m$(CXXFLAGS)\033[00m"
 	$(CXX) $(CXXFLAGS) $< -o $(DIR_OBJ)$@ -c
 

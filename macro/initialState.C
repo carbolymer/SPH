@@ -19,7 +19,7 @@ Double_t GetSpatialDistribution(Double_t *x, Double_t *par) {
 
 int initialState() {
 
-  const int nParticles = 5000;
+  const int nParticles = 1000;
 
   TFile *initial = TFile::Open("./fluids/initial.root","RECREATE");
   TTree *sets = new TTree("sets", "Fluid particles sets");

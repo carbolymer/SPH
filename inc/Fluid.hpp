@@ -29,7 +29,6 @@ public:
   void InstallReadHooks(TTree *readTree);
   void InstallWriteHooks(TTree *writeTree);
   void Reset();
-  void AllocateSpace();
   Fluid& operator=(Fluid &rhs);
 };
 

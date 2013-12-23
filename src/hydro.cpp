@@ -1,13 +1,19 @@
 #include <iostream>
+#include <thread>
 #include <vector>
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
-#include <Fluid.hpp>
+#include "Fluid.hpp"
+#include "Config.hpp"
+#include "Benchmark.hpp"
+#include "Engine.hpp"
+
+using namespace std; 
 
 int main() {
 
-  const int nSteps = 1e3;
+  const int nSteps = _NUMBER_OF_STEPS_;
 
   TFile *initial = TFile::Open("./fluids/initial.root","READ");
   TTree *initialSets = 0;
@@ -25,14 +31,12 @@ int main() {
   Long64_t entryNumber = initialSets->LoadTree(0);
   fluid.GetEntry(entryNumber);
 
+  Engine::CalculateRetardedVelocity(fluid);
   for(unsigned int i = 0; i < nSteps; ++i) {
     fluidComputed = fluid;
-    for(unsigned int j = 0; j < fluid.x->size(); ++j) {
+    Benchmark::Tick(i+1,nSteps);
 
-      fluidComputed.x->at(j) = fluid.x->at(j) + 50./nSteps;
-      fluidComputed.y->at(j) = fluid.y->at(j) - 50./nSteps;
-      for(unsigned int k = 0; k < fluid.x->size(); ++k);
-    }
+    Engine::PerformComputations(0, fluid.x->size(), fluid, fluidComputed);
     sets->Fill();
     fluid.Reset();
     fluid = fluidComputed;
