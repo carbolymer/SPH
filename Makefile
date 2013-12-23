@@ -6,7 +6,7 @@ DIR_TMP=./tmp/
 
 CXXFLAGS=`root-config --cflags` -O2 -Wall -pedantic -std=c++11 -I $(DIR_HPP)
 LFLAGS=`root-config --libs`
-OBJS=hydro.o
+OBJS=hydro.o Fluid.o
 
 # search paths
 vpath %.hpp $(DIR_HPP)
