@@ -13,6 +13,9 @@ using namespace std;
 
 int main() {
 
+  cout << "dt:\t" << _TIME_STEP_ << endl;
+  cout << "0.25h/c\t" << 0.25*_NG_H_/_NG_C_ << endl;
+
   const int nSteps = _NUMBER_OF_STEPS_;
 
   TFile *initial = TFile::Open("./fluids/initial.root","READ");
@@ -20,6 +23,7 @@ int main() {
 
   Fluid fluid;
   Fluid fluidComputed;
+  Engine engine(&fluid);
 
   initial->GetObject("sets",initialSets);
   fluid.InstallReadHooks(initialSets);
@@ -31,12 +35,13 @@ int main() {
   Long64_t entryNumber = initialSets->LoadTree(0);
   fluid.GetEntry(entryNumber);
 
-  Engine::CalculateRetardedVelocity(fluid);
+  engine.CalculateRetardedVelocity();
   for(unsigned int i = 0; i < nSteps; ++i) {
     fluidComputed = fluid;
     Benchmark::Tick(i+1,nSteps);
 
-    Engine::PerformComputations(0, fluid.x->size(), fluid, fluidComputed);
+    engine.PerformComputations(0, fluid.x->size(), fluidComputed);
+
     sets->Fill();
     fluid.Reset();
     fluid = fluidComputed;

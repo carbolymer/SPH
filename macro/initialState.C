@@ -43,8 +43,8 @@ int initialState() {
   spatialDistribution->SetParameter(0,20); // radius
   spatialDistribution->SetParameter(1,50); // position of xmean
   spatialDistribution->SetParameter(2,50); // position of ymean
-  spatialDistribution->SetParameter(3,5);  // sigmax
-  spatialDistribution->SetParameter(4,5);  // sigmay
+  spatialDistribution->SetParameter(3,3);  // sigmax
+  spatialDistribution->SetParameter(4,3);  // sigmay
 
   sets->Branch("x",&x);
   sets->Branch("y",&y);

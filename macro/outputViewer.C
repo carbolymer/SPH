@@ -7,13 +7,12 @@
 
 int outputViewer() {
 
-  const int nSteps = 1e3;
   const int nSkip = 20;
 
   Long64_t entryNumber;
 
   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",900,900);
-  TH2D *histo = new TH2D("histo","fluid",200, 0, 100, 200, 0, 100);
+  TH2D *histo = new TH2D("histo","fluid",400, 0, 100, 400, 0, 100);
 
   TFile *output = TFile::Open("./fluids/output.root","READ");
   TTree *outputSets = 0;
@@ -38,7 +37,9 @@ int outputViewer() {
   outputSets->SetBranchAddress("vx",&vx,&vxReadBranch);
   outputSets->SetBranchAddress("vy",&vy,&vyReadBranch);
   outputSets->SetBranchAddress("m",&m,&mReadBranch);
-  outputSets->SetBranchAddress("rho",&rho,&rhoReadBranch); 
+  outputSets->SetBranchAddress("rho",&rho,&rhoReadBranch);
+
+  cout << "FRAMES: " << outputSets->GetEntries() << endl;
 
   for(int i = 0; i < outputSets->GetEntries(); ++i) {
     entryNumber = outputSets->LoadTree(i);
@@ -49,6 +50,9 @@ int outputViewer() {
     mReadBranch->GetEntry(entryNumber);
     rhoReadBranch->GetEntry(entryNumber);
 
+    // cout << "x: " << x->at(0) << "\ty: " << y->at(0) << endl;
+    // if(i > 2)
+    //   break;
     if (i && (i%nSkip) == 0) {
       histo->Reset();
       for(unsigned int j = 0; j < x->size(); ++j) {
