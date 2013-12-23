@@ -3,3 +3,5 @@ SPH
 tmp/*
 bin/*
 bin/SPH
+*.root
+fluids/
