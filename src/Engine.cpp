@@ -2,8 +2,19 @@
 #include "Engine.hpp"
 #include "Config.hpp"
 
+Engine::Engine(Fluid* _fluid) : fluid(_fluid) {
+  htable = HashTable::GetInstance();
+}
+
 void Engine::PerformComputations(unsigned int indexStart, unsigned int indexStop,
       Fluid &computedFluid) {
+  htable->Clear();
+  for(unsigned int i = 0; i < fluid->x->size(); ++i) {
+    htable->Add(i,TVector2(
+      fluid->x->at(i),
+      fluid->y->at(i)
+    ));
+  }
   vAdv.clear();
   for(unsigned int i = 0; i < fluid->x->size(); ++i) {
     vAdv.push_back(vRet[i] + _TIME_STEP_*GetAcceleration(i));
@@ -31,10 +42,22 @@ void Engine::CalculateRetardedVelocity() {
 
 TVector2 Engine::GetAcceleration(const unsigned int i) {
   TVector2 acceleration(0,0);
-  for(unsigned int j = 0; j < fluid->x->size(); ++j) {
+  TVector2 kernelGrad(0,0);
+
+  std::vector<unsigned int> indices = htable->FindNN(TVector2(
+    fluid->x->at(i),
+    fluid->y->at(i)
+  ));
+
+  // for(unsigned int j = 0; j < fluid->x->size(); ++j) {
+  for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
+    j = indices[hindice];
+    kernelGrad = GetSmoothingKernelGrad(i,j);
+    if(kernelGrad.X() == 0 && kernelGrad.Y() == 0) {
+      continue;
+    }
     acceleration += fluid->m->at(j) *
-      ( 1/fluid->rho->at(i) + 1/fluid->rho->at(j) + GetViscosity(i,j) ) *
-      GetSmoothingKernelGrad(i,j);
+      ( 1/fluid->rho->at(i) + 1/fluid->rho->at(j) + GetViscosity(i,j) ) * kernelGrad;
   }
   acceleration *= -(_NG_C_*_NG_C_/_NG_GAMMA_);
   return acceleration;
@@ -67,14 +90,10 @@ TVector2 Engine::GetSmoothingKernelGrad(const unsigned int i, const unsigned int
   double x2 = fluid->x->at(j);
   double y2 = fluid->y->at(j);
   TVector2 r(x1-x2, y1-y2);
-  double rLen = r.Mod();
-  if(rLen == 0)
-  {
-    // r.Print();
-    // std::cerr << "division by zero!!!" << std::endl;
-    // std::cerr << "fluid size: " << fluid->x->size() << std::endl;
-    return TVector2(0,0);
+  if(r.X() == 0 && r.Y() == 0) {
+    return r;
   }
+  double rLen = r.Mod();
   TVector2 resultVec(r);
   resultVec /= rLen;
   double u = rLen/_NG_H_;

@@ -7,12 +7,13 @@
 
 int outputViewer() {
 
-  const int nSkip = 20;
+  const int nSkip = 1;
+  const float resolution = 80;
 
   Long64_t entryNumber;
 
   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",900,900);
-  TH2D *histo = new TH2D("histo","fluid",400, 0, 100, 400, 0, 100);
+  TH2D *histo = new TH2D("histo","fluid",resolution, 0, 100, resolution, 0, 100);
 
   TFile *output = TFile::Open("./fluids/output.root","READ");
   TTree *outputSets = 0;

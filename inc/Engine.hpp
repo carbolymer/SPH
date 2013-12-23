@@ -4,14 +4,16 @@
 #include <vector>
 #include "TVector2.h"
 #include "Fluid.hpp"
+#include "HashTable.hpp"
 
 class Engine {
 private:
+  HashTable *htable;
   Fluid * const fluid;
   std::vector<TVector2> vAdv; // advanced velocity by tau/2
   std::vector<TVector2> vRet; // retarded velocity by tau/2
 public:
-  Engine(Fluid* _fluid) : fluid(_fluid) {};
+  Engine(Fluid* _fluid);
   ~Engine() {};
   void CalculateRetardedVelocity();
   void CalculateAdvancedVelocity();

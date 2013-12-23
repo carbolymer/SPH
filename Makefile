@@ -5,9 +5,9 @@ DIR_BIN=./bin/
 DIR_TMP=./tmp/
 DIR_DATA=./fluids/
 
-CXXFLAGS=`root-config --cflags` -O2 -Wall -pedantic -std=c++11 -I $(DIR_HPP)
+CXXFLAGS=`root-config --cflags` -Ofast -Wall -pedantic -std=c++11 -I $(DIR_HPP)
 LFLAGS=`root-config --libs`
-OBJS=Benchmark.o hydro.o Fluid.o Engine.o
+OBJS=Benchmark.o Engine.o Fluid.o HashTable.o hydro.o
 
 # search paths
 vpath %.hpp $(DIR_HPP)
