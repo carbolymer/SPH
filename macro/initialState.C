@@ -8,13 +8,14 @@
 #include <TFile.h>
 
 Double_t GetSpatialDistribution(Double_t *x, Double_t *par) {
-  Double_t radius = par[0];
-  Double_t xmean = par[1];
-  Double_t ymean = par[2];
-  Double_t xsigma = par[3];
-  Double_t ysigma = par[4];
-  Double_t r = x[0]*x[0]+x[1]*x[1];
-  return TMath::Gaus(x[0], xmean, xsigma)*TMath::Gaus(x[1], ymean, ysigma);
+  Double_t const radius = par[0];
+  Double_t const xmean = par[1];
+  Double_t const ymean = par[2];
+  Double_t const xsigma = par[3];
+  Double_t const ysigma = par[4];
+  Double_t const r = TMath::Sqrt((x[0]-xmean)*(x[0]-xmean)+(x[1]-ymean)*(x[1]-ymean));
+  // return TMath::Gaus(x[0], xmean, xsigma)*TMath::Gaus(x[1], ymean, ysigma);
+  return 1/(TMath::Exp(xsigma*(r-radius))+1);
 }
 
 int initialState() {
@@ -65,6 +66,8 @@ int initialState() {
     fluid->Fill(x_,y_);
     x.push_back(x_);
     y.push_back(y_);
+    // vx.push_back(1e3.*(y_-x_));
+    // vy.push_back(1e3.*(-x_-y_+100));
     vx.push_back(0.);
     vy.push_back(0.);
     m.push_back(1);

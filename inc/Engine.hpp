@@ -8,6 +8,7 @@
 
 class Engine {
 private:
+  double const alpha;
   HashTable *htable;
   Fluid * const fluid;
   std::vector<TVector2> vAdv; // advanced velocity by tau/2
@@ -20,9 +21,12 @@ public:
   void PerformComputations(const unsigned int indexStart, unsigned int indexStop,
       Fluid &computedFluid);
   TVector2 GetAcceleration(const unsigned int);
-  double GetSmoothingKernel(const unsigned int, const unsigned int);
+  double GetMassDensity(const unsigned int);
   double GetViscosity(const unsigned int, const unsigned int);
+  double GetSmoothingKernel(const unsigned int, const unsigned int);
   TVector2 GetSmoothingKernelGrad(const unsigned int, const unsigned int);
+  double GetSmoothingKernelLapl(const unsigned int, const unsigned int);
+  TVector2 GetSurfaceNormal(const unsigned int);
 };
 
 #endif

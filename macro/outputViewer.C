@@ -8,9 +8,11 @@
 int outputViewer() {
 
   const int nSkip = 1;
-  const float resolution = 80;
+  const float resolution = 100;
 
   Long64_t entryNumber;
+
+  gStyle->SetPalette(1);
 
   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",900,900);
   TH2D *histo = new TH2D("histo","fluid",resolution, 0, 100, resolution, 0, 100);
@@ -51,16 +53,14 @@ int outputViewer() {
     mReadBranch->GetEntry(entryNumber);
     rhoReadBranch->GetEntry(entryNumber);
 
-    // cout << "x: " << x->at(0) << "\ty: " << y->at(0) << endl;
-    // if(i > 2)
-    //   break;
     if (i && (i%nSkip) == 0) {
       histo->Reset();
       for(unsigned int j = 0; j < x->size(); ++j) {
         histo->Fill(x->at(j),y->at(j));
       }
       if (i == nSkip) {
-        histo->Draw("col");
+        // histo->Draw("scat=2");
+        histo->Draw("colz");
       }
       c1->Modified();
       c1->Update();

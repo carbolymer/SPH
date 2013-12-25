@@ -5,3 +5,4 @@ bin/*
 bin/SPH
 *.root
 fluids/
+octave-core

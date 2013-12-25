@@ -2,7 +2,7 @@
 #include "Engine.hpp"
 #include "Config.hpp"
 
-Engine::Engine(Fluid* _fluid) : fluid(_fluid) {
+Engine::Engine(Fluid* _fluid) : alpha(37./32/M_PI/pow(_NG_H_,7)), fluid(_fluid)  {
   htable = HashTable::GetInstance();
 }
 
@@ -16,6 +16,10 @@ void Engine::PerformComputations(unsigned int indexStart, unsigned int indexStop
     ));
   }
   vAdv.clear();
+  for(unsigned int i = 0; i < fluid->x->size(); ++i) {
+    computedFluid.rho->at(i) = GetMassDensity(i);
+  }
+
   for(unsigned int i = 0; i < fluid->x->size(); ++i) {
     vAdv.push_back(vRet[i] + _TIME_STEP_*GetAcceleration(i));
     computedFluid.x->at(i) = fluid->x->at(i) + _TIME_STEP_*vAdv[i].X();
@@ -40,6 +44,21 @@ void Engine::CalculateRetardedVelocity() {
   }
 }
 
+double Engine::GetMassDensity(const unsigned int i) {
+  double density = 0;
+
+  std::vector<unsigned int> indices = htable->FindNN(TVector2(
+    fluid->x->at(i),
+    fluid->y->at(i)
+  ));
+
+  for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
+    j = indices[hindice];
+    density += fluid->m->at(j)*GetSmoothingKernel(i,j);
+  }
+  return density;
+}
+
 TVector2 Engine::GetAcceleration(const unsigned int i) {
   TVector2 acceleration(0,0);
   TVector2 kernelGrad(0,0);
@@ -49,17 +68,19 @@ TVector2 Engine::GetAcceleration(const unsigned int i) {
     fluid->y->at(i)
   ));
 
-  // for(unsigned int j = 0; j < fluid->x->size(); ++j) {
+  TVector2 surfaceNormal = _NG_SIGMA_*GetSurfaceNormal(i)/fluid->rho->at(i);
+  const double internalPressureConst = -(_NG_C_*_NG_C_/_NG_GAMMA_);
+
   for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
     j = indices[hindice];
     kernelGrad = GetSmoothingKernelGrad(i,j);
     if(kernelGrad.X() == 0 && kernelGrad.Y() == 0) {
       continue;
     }
-    acceleration += fluid->m->at(j) *
-      ( 1/fluid->rho->at(i) + 1/fluid->rho->at(j) + GetViscosity(i,j) ) * kernelGrad;
+    // acceleration += internalPressureConst*fluid->m->at(j) *
+    //   ( 1/fluid->rho->at(i) + 1/fluid->rho->at(j) + GetViscosity(i,j) ) * kernelGrad;
+    acceleration -= surfaceNormal*fluid->m->at(j)/fluid->rho->at(j)*GetSmoothingKernelLapl(i,j);
   }
-  acceleration *= -(_NG_C_*_NG_C_/_NG_GAMMA_);
   return acceleration;
 }
 
@@ -68,42 +89,63 @@ double Engine::GetViscosity(const unsigned int i, const unsigned j) {
 }
 
 double Engine::GetSmoothingKernel(const unsigned int i, const unsigned int j) {
-  double x1 = fluid->x->at(i);
-  double y1 = fluid->x->at(i);
-  double x2 = fluid->x->at(j);
-  double y2 = fluid->x->at(j);
-  double r = sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-  double u = r/_NG_H_;
+  double const x1 = fluid->x->at(i);
+  double const y1 = fluid->x->at(i);
+  double const x2 = fluid->x->at(j);
+  double const y2 = fluid->x->at(j);
+  double const rsq = (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
+  double const hsq = _NG_H_*_NG_H_;
   double result = 0;
-  if(u <= 1) {
-    result = 1.-3./2.*u*u+3./4.*u*u*u;
-  } else if(u <= 2) {
-    result = (2.-u)*(2.-u)*(2.-u)/4.;
-  } 
-  result *= _NG_SIGMA_/pow(_NG_H_,_NG_NDIM_);
+  if(rsq <= hsq) {
+    result = (hsq-rsq)*(hsq-rsq)*(hsq-rsq)*alpha;
+  }
   return result;
 }
 
 TVector2 Engine::GetSmoothingKernelGrad(const unsigned int i, const unsigned int j) {
-  double x1 = fluid->x->at(i);
-  double y1 = fluid->y->at(i);
-  double x2 = fluid->x->at(j);
-  double y2 = fluid->y->at(j);
+  double const x1 = fluid->x->at(i);
+  double const y1 = fluid->y->at(i);
+  double const x2 = fluid->x->at(j);
+  double const y2 = fluid->y->at(j);
+  if(x1 == x2 && y1 == y2)
+    return TVector2(0,0);
   TVector2 r(x1-x2, y1-y2);
-  if(r.X() == 0 && r.Y() == 0) {
-    return r;
-  }
-  double rLen = r.Mod();
-  TVector2 resultVec(r);
-  resultVec /= rLen;
-  double u = rLen/_NG_H_;
+  double const rsq = (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
+  double const hsq = _NG_H_*_NG_H_;
+  if(rsq <= hsq)
+    r *= -3./2.*alpha*(hsq-rsq)*(hsq-rsq);
+  else 
+    return TVector2(0,0);
+  return r;
+}
+
+double Engine::GetSmoothingKernelLapl(const unsigned int i, const unsigned int j) {
+  double const x1 = fluid->x->at(i);
+  double const y1 = fluid->x->at(i);
+  double const x2 = fluid->x->at(j);
+  double const y2 = fluid->x->at(j);
+  double const rsq = (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
+  double const hsq = _NG_H_*_NG_H_;
   double result = 0;
-  if(u <= 1) {
-    result = -3.*u+9./4.*u*u;
-  } else if(u <= 2) {
-    result = -3./4.*(2.-u)*(2.-u);
+  if(rsq <= hsq) {
+    result = -12.*alpha*(hsq-rsq)*(hsq-3*rsq);
   }
-  result *= _NG_SIGMA_/pow(_NG_H_,_NG_NDIM_+1);
-  resultVec *= result;
-  return resultVec;
+  return result;
+}
+
+TVector2 Engine::GetSurfaceNormal(const unsigned int i) {
+  TVector2 norm(0,0);
+  std::vector<unsigned int> indices = htable->FindNN(TVector2(
+    fluid->x->at(i),
+    fluid->y->at(i)
+  ));
+
+  if(indices.size() < 4)
+    return norm;
+
+  for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
+    j = indices[hindice];
+    norm += fluid->m->at(j)/fluid->rho->at(j)*GetSmoothingKernelGrad(i,j);
+  }
+  return norm.Unit();
 }
