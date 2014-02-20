@@ -1,3 +1,5 @@
+// requires ROOT (root.cern.ch)
+
 #include <iostream>
 #include <vector>
 #include <TFile.h>
@@ -7,7 +9,7 @@
 
 int outputViewer() {
 
-  const int nSkip = 1;
+  const int nSkip = 30;
   const float resolution = 100;
 
   Long64_t entryNumber;
@@ -59,7 +61,7 @@ int outputViewer() {
         histo->Fill(x->at(j),y->at(j));
       }
       if (i == nSkip) {
-        // histo->Draw("scat=2");
+        // histo->Draw("scat=1");
         histo->Draw("colz");
       }
       c1->Modified();

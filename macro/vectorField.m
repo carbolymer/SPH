@@ -1,6 +1,10 @@
 [X,Y] = meshgrid(-2:.2:2);
-Zx = Y - X;
-Zy = -X - Y;
+% rotation with squeeze
+% Zx = Y - X;
+% Zy = -X - Y;
+% rotation
+Zx = -Y;
+Zy = X;
 
 figure
 hold on

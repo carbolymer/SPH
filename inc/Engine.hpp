@@ -2,6 +2,7 @@
 #define _ENGINE_HPP_
 
 #include <vector>
+#include "TMath.h"
 #include "TVector2.h"
 #include "Fluid.hpp"
 #include "HashTable.hpp"
@@ -27,6 +28,7 @@ public:
   TVector2 GetSmoothingKernelGrad(const unsigned int, const unsigned int);
   double GetSmoothingKernelLapl(const unsigned int, const unsigned int);
   TVector2 GetSurfaceNormal(const unsigned int);
+  TVector2 GetArtificialForce(const unsigned int, const unsigned int);
 };
 
 #endif

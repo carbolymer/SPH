@@ -69,7 +69,7 @@ TVector2 Engine::GetAcceleration(const unsigned int i) {
   ));
 
   TVector2 surfaceNormal = _NG_SIGMA_*GetSurfaceNormal(i)/fluid->rho->at(i);
-  const double internalPressureConst = -(_NG_C_*_NG_C_/_NG_GAMMA_);
+  // const double internalPressureConst = -(_NG_C_*_NG_C_/_NG_GAMMA_);
 
   for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
     j = indices[hindice];
@@ -77,10 +77,14 @@ TVector2 Engine::GetAcceleration(const unsigned int i) {
     if(kernelGrad.X() == 0 && kernelGrad.Y() == 0) {
       continue;
     }
+    // - pressure
     // acceleration += internalPressureConst*fluid->m->at(j) *
     //   ( 1/fluid->rho->at(i) + 1/fluid->rho->at(j) + GetViscosity(i,j) ) * kernelGrad;
-    acceleration -= surfaceNormal*fluid->m->at(j)/fluid->rho->at(j)*GetSmoothingKernelLapl(i,j);
+    // - surface tension
+    // acceleration -= surfaceNormal*fluid->m->at(j)/fluid->rho->at(j)*GetSmoothingKernelLapl(i,j);
+    acceleration += GetArtificialForce(i,j);
   }
+  acceleration /= fluid->m->at(i);
   return acceleration;
 }
 
@@ -109,11 +113,11 @@ TVector2 Engine::GetSmoothingKernelGrad(const unsigned int i, const unsigned int
   double const y2 = fluid->y->at(j);
   if(x1 == x2 && y1 == y2)
     return TVector2(0,0);
-  TVector2 r(x1-x2, y1-y2);
+  TVector2 r(x2-x1, y2-y1);
   double const rsq = (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
   double const hsq = _NG_H_*_NG_H_;
   if(rsq <= hsq)
-    r *= -3./2.*alpha*(hsq-rsq)*(hsq-rsq);
+    r *= 3./2.*alpha*(hsq-rsq)*(hsq-rsq);
   else 
     return TVector2(0,0);
   return r;
@@ -147,5 +151,29 @@ TVector2 Engine::GetSurfaceNormal(const unsigned int i) {
     j = indices[hindice];
     norm += fluid->m->at(j)/fluid->rho->at(j)*GetSmoothingKernelGrad(i,j);
   }
-  return norm.Unit();
+  return 1.0*norm.Unit();
+}
+
+
+TVector2 Engine::GetArtificialForce(const unsigned int i, const unsigned int j) {
+  double const magnitude = 1e7;
+  double const x1 = fluid->x->at(i);
+  double const y1 = fluid->y->at(i);
+  double const x2 = fluid->x->at(j);
+  double const y2 = fluid->y->at(j);
+  TVector2 r(x2-x1, y2-y1);
+  r = r.Unit();
+  double const rlen = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+
+  double const px = rlen/_NG_H_*3.;
+
+  if(px < 1.53)
+    return 0*r;
+
+  double const p1                        =     -7.82904;
+  double const p2                        =      6.18333;
+  double const p3                        =     -1.51929;
+  double const p4                        =     0.109357;
+
+  return magnitude * (p1+2*p2*px+3*p3*px*px+4*p4*px*px*px+0.0/9.0/rlen/rlen)*r;
 }
