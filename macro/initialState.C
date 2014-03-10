@@ -188,8 +188,8 @@ int initialState() {
   rho.clear();
   m.clear();
   
-  // createDroplet(x,y,vx,vy,m,rho);
-  createDropletCollision(x,y,vx,vy,m,rho);
+  createDroplet(x,y,vx,vy,m,rho);
+  // createDropletCollision(x,y,vx,vy,m,rho);
   // createDiffraction(x,y,vx,vy,m,rho);
 
   sets->Fill();

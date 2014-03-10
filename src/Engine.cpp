@@ -9,24 +9,33 @@ Engine::Engine(Fluid* _fluid) : alpha(37./32/M_PI/pow(_NG_H_,7)), fluid(_fluid) 
 void Engine::PerformComputations(unsigned int indexStart, unsigned int indexStop,
       Fluid &computedFluid) {
   htable->Clear();
-  for(unsigned int i = 0; i < fluid->x->size(); ++i) {
+
+  meanTotalEnergy = 0;
+
+  for(unsigned int i = 0; i < fluid->GetParticlesCount(); ++i) {
     htable->Add(i,TVector2(
       fluid->x->at(i),
       fluid->y->at(i)
     ));
   }
   vAdv.clear();
-  for(unsigned int i = 0; i < fluid->x->size(); ++i) {
+  for(unsigned int i = 0; i < fluid->GetParticlesCount(); ++i) {
     computedFluid.rho->at(i) = GetMassDensity(i);
   }
 
-  for(unsigned int i = 0; i < fluid->x->size(); ++i) {
+  for(unsigned int i = 0; i < fluid->GetParticlesCount(); ++i) {
     vAdv.push_back(vRet[i] + _TIME_STEP_*GetAcceleration(i));
     computedFluid.x->at(i) = fluid->x->at(i) + _TIME_STEP_*vAdv[i].X();
     computedFluid.y->at(i) = fluid->y->at(i) + _TIME_STEP_*vAdv[i].Y();
     computedFluid.vx->at(i) = (vRet[i]+vAdv[i]).X();
     computedFluid.vy->at(i) = (vRet[i]+vAdv[i]).Y();
+    if(_NG_CALCULATE_ENERGY_) {
+      meanTotalEnergy += (computedFluid.vx->at(i)*computedFluid.vx->at(i) + computedFluid.vx->at(i)
+          + computedFluid.vy->at(i)*computedFluid.vy->at(i))*fluid->m->at(i) + GetPotential(i);
+    }
   }
+
+  meanTotalEnergy /= fluid->GetParticlesCount();
 
   vRet.clear();
   vRet = std::vector<TVector2>(vAdv);
@@ -86,6 +95,26 @@ TVector2 Engine::GetAcceleration(const unsigned int i) {
   }
   acceleration /= fluid->m->at(i);
   return acceleration;
+}
+
+Double_t Engine::GetPotential(const unsigned int i) {
+  Double_t potential = 0;
+  TVector2 kernelGrad(0,0);
+
+  std::vector<unsigned int> indices = htable->FindNN(TVector2(
+    fluid->x->at(i),
+    fluid->y->at(i)
+  ));
+
+  for(unsigned int hindice = 0, j = 0; hindice < indices.size(); ++hindice) {
+    j = indices[hindice];
+    kernelGrad = GetSmoothingKernelGrad(i,j);
+    if(kernelGrad.X() == 0 && kernelGrad.Y() == 0) {
+      continue;
+    }
+    potential += GetArtificialPotential(i,j);
+  }
+  return potential;
 }
 
 double Engine::GetViscosity(const unsigned int i, const unsigned j) {
@@ -176,4 +205,28 @@ TVector2 Engine::GetArtificialForce(const unsigned int i, const unsigned int j) 
   double const p4                        =     0.109357;
 
   return magnitude * (p1+2*p2*px+3*p3*px*px+4*p4*px*px*px+0.0/9.0/rlen/rlen)*r;
+}
+
+Double_t Engine::GetArtificialPotential(const unsigned int i, const unsigned int j) {
+  //tofix
+  double const magnitude = 1e7;
+  double const x1 = fluid->x->at(i);
+  double const y1 = fluid->y->at(i);
+  double const x2 = fluid->x->at(j);
+  double const y2 = fluid->y->at(j);
+  TVector2 r(x2-x1, y2-y1);
+  r = r.Unit();
+  double const rlen = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+
+  double const px = rlen/_NG_H_*3.;
+
+  if(px < 1.53)
+    return 0;
+
+  double const p1                        =     -7.82904;
+  double const p2                        =      6.18333;
+  double const p3                        =     -1.51929;
+  double const p4                        =     0.109357;
+
+  return magnitude * (p1*px+p2*px*px+p3*px*px*px+p4*px*px*px*px+0.0/9.0/rlen/rlen);
 }

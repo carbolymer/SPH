@@ -29,6 +29,7 @@ public:
   void InstallReadHooks(TTree *readTree);
   void InstallWriteHooks(TTree *writeTree);
   void Reset();
+  const unsigned int GetParticlesCount() const { return x->size();};
   Fluid& operator=(Fluid &rhs);
 };
 

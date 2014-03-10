@@ -9,8 +9,8 @@
 
 int outputViewer() {
 
-  const int nSkip = 30;
-  const float resolution = 100;
+  const int nSkip = 20;
+  const float resolution = 200;
 
   Long64_t entryNumber;
 

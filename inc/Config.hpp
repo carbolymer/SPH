@@ -14,6 +14,7 @@
 #define _NG_GAMMA_ 1e12          // gamma
 #define _NG_C_ 2000           // sound velocity
 #define _NG_SIGMA_ 1e6        // surface tension
+#define _NG_CALCULATE_ENERGY_ 1
 
 //hashtable
 #define _HT_P1_ 73856093
